@@ -1,72 +1,95 @@
 package com.project.back_end.models;
 
 public class Appointment {
+ private int apptId;
+    private int doctorId;
+    private int patientId;
+    private String startTime;
+    private String endTime;
+    private String apptDate;
+    private String status;
+    private int statusId ;
+    private int visitTypeId;
+    private String visitTypeName;
+    
+    /* Establish a HAS-A-RELATIONSHIP with Patient and Doctor classes/objects. */
+    private Patient patient;
+    private Doctor doctor;
 
-  // @Entity annotation:
-//    - Marks the class as a JPA entity, meaning it represents a table in the database.
-//    - Required for persistence frameworks (e.g., Hibernate) to map the class to a database table.
+    public Appointment() { }
 
-// 1. 'id' field:
-//    - Type: private Long
-//    - Description:
-//      - Represents the unique identifier for each appointment.
-//      - The @Id annotation marks it as the primary key.
-//      - The @GeneratedValue(strategy = GenerationType.IDENTITY) annotation auto-generates the ID value when a new record is inserted into the database.
+    public Appointment(Patient patient, Doctor doctor, int apptId, String startTime, String endTime, String date, String visitTypeName, int visitTypeId, String status, int statusId) {
+        this.patient = patient;
+        this.doctor = doctor;
+        this.apptId = apptId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.apptDate = date;
+        this.status = status;
+        this.statusId = statusId;
+        this.visitTypeId = visitTypeId;
+        this.visitTypeName = visitTypeName;
+    }
 
-// 2. 'doctor' field:
-//    - Type: private Doctor
-//    - Description:
-//      - Represents the doctor assigned to this appointment.
-//      - The @ManyToOne annotation defines the relationship, indicating many appointments can be linked to one doctor.
-//      - The @NotNull annotation ensures that an appointment must be associated with a doctor when created.
+    public Appointment(int apptId, int doctorId, int patientId, String startTime, String endTime, String apptDate, String status, int statusId) {
+        this.apptId = apptId;
+        this.doctorId = doctorId;
+        this.patientId = patientId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.apptDate = apptDate;
+        this.status = status;
+        this.statusId = statusId;
+        this.visitTypeId = visitTypeId;
+        this.visitTypeName = visitTypeName;
+    }
 
-// 3. 'patient' field:
-//    - Type: private Patient
-//    - Description:
-//      - Represents the patient assigned to this appointment.
-//      - The @ManyToOne annotation defines the relationship, indicating many appointments can be linked to one patient.
-//      - The @NotNull annotation ensures that an appointment must be associated with a patient when created.
+    public void setApptId(int i) { this.apptId = i; }
 
-// 4. 'appointmentTime' field:
-//    - Type: private LocalDateTime
-//    - Description:
-//      - Represents the date and time when the appointment is scheduled to occur.
-//      - The @Future annotation ensures that the appointment time is always in the future when the appointment is created.
-//      - It uses LocalDateTime, which includes both the date and time for the appointment.
+    public void setDoctorId(int i) { this.doctorId = i; }
 
-// 5. 'status' field:
-//    - Type: private int
-//    - Description:
-//      - Represents the current status of the appointment. It is an integer where:
-//        - 0 means the appointment is scheduled.
-//        - 1 means the appointment has been completed.
-//      - The @NotNull annotation ensures that the status field is not null.
+    public void setPatientId(int i) { this.patientId = i; }
 
-// 6. 'getEndTime' method:
-//    - Type: private LocalDateTime
-//    - Description:
-//      - This method is a transient field (not persisted in the database).
-//      - It calculates the end time of the appointment by adding one hour to the start time (appointmentTime).
-//      - It is used to get an estimated appointment end time for display purposes.
+    public void setStartTime(String s) { this.startTime = s; }
 
-// 7. 'getAppointmentDate' method:
-//    - Type: private LocalDate
-//    - Description:
-//      - This method extracts only the date part from the appointmentTime field.
-//      - It returns a LocalDate object representing just the date (without the time) of the scheduled appointment.
+    public void setEndTime(String s) { this.endTime = s; }
 
-// 8. 'getAppointmentTimeOnly' method:
-//    - Type: private LocalTime
-//    - Description:
-//      - This method extracts only the time part from the appointmentTime field.
-//      - It returns a LocalTime object representing just the time (without the date) of the scheduled appointment.
+    public void setDate(String s) { this.apptDate = s; }
 
-// 9. Constructor(s):
-//    - A no-argument constructor is implicitly provided by JPA for entity creation.
-//    - A parameterized constructor can be added as needed to initialize fields.
+    public void setStatus(String s) { this.status = s; }
 
-// 10. Getters and Setters:
-//    - Standard getter and setter methods are provided for accessing and modifying the fields: id, doctor, patient, appointmentTime, status, etc.
+    public void setStatusId(int i) { this.statusId = i; };
 
+    public int getApptId() { return apptId; }
+
+    public int getDoctorId() { return doctorId; }
+
+    public int getPatientId() { return patientId; }
+
+    public String getStartTime() { return startTime; }
+
+    public String getEndTime() { return endTime; }
+
+    public String getDate() { return apptDate; }
+
+    public String getStatus() { return status; }
+
+    public int getStatusId() { return statusId; }
+
+    public int getVisitTypeId() { return visitTypeId; }
+
+    public void setVisitTypeId(int visitTypeId) { this.visitTypeId = visitTypeId; }
+
+    public String getVisitTypeName() { return visitTypeName; }
+
+    public void setVisitTypeName(String visitTypeName) { this.visitTypeName = visitTypeName; }
+    
+    public Patient getPatient() { return patient; }
+
+    public void setPatient(Patient patient) { this.patient = patient; }
+
+    public Doctor getDoctor() { return doctor; }
+
+    public void setDoctor(Doctor doctor) { this.doctor = doctor; }
 }
 
