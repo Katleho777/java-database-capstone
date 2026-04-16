@@ -1,0 +1,88 @@
+name: Java Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'java-src/**'
+      - 'pom.xml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'java-src/**'
+      - 'pom.xml'
+
+jobs:
+  build:
+    name: Build and Test Java Backend
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: clinic_user
+          POSTGRES_PASSWORD: clinic_password
+          POSTGRES_DB: smart_clinic
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Compile Java source
+        run: mvn compile -q
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/smart_clinic
+          SPRING_DATASOURCE_USERNAME: clinic_user
+          SPRING_DATASOURCE_PASSWORD: clinic_password
+
+      - name: Run tests
+        run: mvn test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/smart_clinic
+          SPRING_DATASOURCE_USERNAME: clinic_user
+          SPRING_DATASOURCE_PASSWORD: clinic_password
+          JWT_SECRET: test-secret-key-for-github-actions-ci
+
+      - name: Build JAR
+        run: mvn package -DskipTests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/smart_clinic
+          SPRING_DATASOURCE_USERNAME: clinic_user
+          SPRING_DATASOURCE_PASSWORD: clinic_password
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: clinic-backend-jar
+          path: target/*.jar
+          retention-days: 7
+
+      - name: Build Docker image
+        run: docker build -t smart-clinic-backend:${{ github.sha }} .
+
+      - name: Notify on success
+        if: success()
+        run: echo "Build succeeded for commit ${{ github.sha }}"
