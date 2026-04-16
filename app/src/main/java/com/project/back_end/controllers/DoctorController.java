@@ -1,3 +1,4 @@
+package com.clinic.controller;
 
 import com.clinic.model.Doctor;
 import com.clinic.model.Appointment;
