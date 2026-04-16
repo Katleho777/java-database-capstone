@@ -1,56 +1,51 @@
 package com.project.back_end.models;
 
+package com.clinic.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "prescriptions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Prescription {
 
-  // @Document annotation:
-//    - Marks the class as a MongoDB document (a collection in MongoDB).
-//    - The collection name is specified as "prescriptions" to map this class to the "prescriptions" collection in MongoDB.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-// 1. 'id' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the unique identifier for each prescription.
-//      - The @Id annotation marks it as the primary key in the MongoDB collection.
-//      - The id is of type String, which is commonly used for MongoDB's ObjectId as it stores IDs as strings in the database.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appointment_id", nullable = false)
+    private Appointment appointment;
 
-// 2. 'patientName' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the name of the patient receiving the prescription.
-//      - The @NotNull annotation ensures that the patient name is required.
-//      - The @Size(min = 3, max = 100) annotation ensures that the name length is between 3 and 100 characters, ensuring a reasonable name length.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
 
-// 3. 'appointmentId' field:
-//    - Type: private Long
-//    - Description:
-//      - Represents the ID of the associated appointment where the prescription was given.
-//      - The @NotNull annotation ensures that the appointment ID is required for the prescription.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Doctor doctor;
 
-// 4. 'medication' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the medication prescribed to the patient.
-//      - The @NotNull annotation ensures that the medication name is required.
-//      - The @Size(min = 3, max = 100) annotation ensures that the medication name is between 3 and 100 characters, which ensures meaningful medication names.
+    @Column(name = "medication", nullable = false)
+    private String medication;
 
-// 5. 'dosage' field:
-//    - Type: private String
-//    - Description:
-//      - Represents the dosage information for the prescribed medication.
-//      - The @NotNull annotation ensures that the dosage information is provided.
+    @Column(name = "dosage", nullable = false)
+    private String dosage;
 
-// 6. 'doctorNotes' field:
-//    - Type: private String
-//    - Description:
-//      - Represents any additional notes or instructions from the doctor regarding the prescription.
-//      - The @Size(max = 200) annotation ensures that the doctor's notes do not exceed 200 characters, providing a reasonable limit for additional notes.
+    @Column(name = "instructions", columnDefinition = "TEXT")
+    private String instructions;
 
-// 7. Constructors:
-//    - The class includes a no-argument constructor (default constructor) and a parameterized constructor that initializes the fields: patientName, medication, dosage, doctorNotes, and appointmentId.
+    @Column(name = "issued_at")
+    private LocalDateTime issuedAt;
 
-// 8. Getters and Setters:
-//    - Standard getter and setter methods are provided for all fields: id, patientName, medication, dosage, doctorNotes, and appointmentId.
-//    - These methods allow access and modification of the fields of the Prescription class.
-
-
+    @PrePersist
+    protected void onIssue() {
+        issuedAt = LocalDateTime.now();
+    }
 }
