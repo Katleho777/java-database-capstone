@@ -1,33 +1,55 @@
 package com.project.back_end.controllers;
 
+package com.clinic.controller;
+
+import com.clinic.model.Prescription;
+import com.clinic.service.PrescriptionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/prescriptions")
+@CrossOrigin(origins = "*")
 public class PrescriptionController {
-    
-// 1. Set Up the Controller Class:
-//    - Annotate the class with `@RestController` to define it as a REST API controller.
-//    - Use `@RequestMapping("${api.path}prescription")` to set the base path for all prescription-related endpoints.
-//    - This controller manages creating and retrieving prescriptions tied to appointments.
 
+    @Autowired
+    private PrescriptionService prescriptionService;
 
-// 2. Autowire Dependencies:
-//    - Inject `PrescriptionService` to handle logic related to saving and fetching prescriptions.
-//    - Inject the shared `Service` class for token validation and role-based access control.
-//    - Inject `AppointmentService` to update appointment status after a prescription is issued.
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    public ResponseEntity<List<Prescription>> getAllPrescriptions() {
+        return ResponseEntity.ok(prescriptionService.getAllPrescriptions());
+    }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
+    public ResponseEntity<Prescription> getPrescriptionById(@PathVariable Long id) {
+        return prescriptionService.getPrescriptionById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-// 3. Define the `savePrescription` Method:
-//    - Handles HTTP POST requests to save a new prescription for a given appointment.
-//    - Accepts a validated `Prescription` object in the request body and a doctor’s token as a path variable.
-//    - Validates the token for the `"doctor"` role.
-//    - If the token is valid, updates the status of the corresponding appointment to reflect that a prescription has been added.
-//    - Delegates the saving logic to `PrescriptionService` and returns a response indicating success or failure.
+    @PostMapping
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Prescription> createPrescription(@RequestBody Prescription prescription) {
+        Prescription created = prescriptionService.createPrescription(prescription);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
+    @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
+    public ResponseEntity<List<Prescription>> getPrescriptionsByPatient(@PathVariable Long patientId) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptionsByPatientId(patientId));
+    }
 
-// 4. Define the `getPrescription` Method:
-//    - Handles HTTP GET requests to retrieve a prescription by its associated appointment ID.
-//    - Accepts the appointment ID and a doctor’s token as path variables.
-//    - Validates the token for the `"doctor"` role using the shared service.
-//    - If the token is valid, fetches the prescription using the `PrescriptionService`.
-//    - Returns the prescription details or an appropriate error message if validation fails.
-
-
+    @GetMapping("/doctor/{doctorId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
+    public ResponseEntity<List<Prescription>> getPrescriptionsByDoctor(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptionsByDoctorId(doctorId));
+    }
 }
