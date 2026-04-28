@@ -7,6 +7,10 @@ _As an admin, I want to be able to add, remove and edit doctors and any hospital
 1. Admin access to both patient and doctor information also being able to edit the information for proper usage while being safe and secure from patients.
 2. Easy use and access to view all appointments by either doctor or patient or any information linked to the appointment
 3. Database access and easy storage of all information and data added.
+4. Admin must be able to change and update all information about appointments, doctors and patients.
+5. Doctors must be able to view all their appointments and be able to set time off and availability.
+6. Patients must be able to enter their details and remove them without the need to store the login details on the cloud.
+7. Passwords and login details must not be encryted per user.
 
 **Priority:** [High/Medium/Low]
 **Story Points:** [Estimated Effort in Points]
