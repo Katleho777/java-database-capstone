@@ -1,95 +1,107 @@
 package com.project.back_end.models;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+@Entity
+@Table(name = "appointments")
 public class Appointment {
- private int apptId;
-    private int doctorId;
-    private int patientId;
-    private String startTime;
-    private String endTime;
-    private String apptDate;
-    private String status;
-    private int statusId ;
-    private int visitTypeId;
-    private String visitTypeName;
-    
-    /* Establish a HAS-A-RELATIONSHIP with Patient and Doctor classes/objects. */
-    private Patient patient;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull(message = "Doctor must be assigned")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
-    public Appointment() { }
+    @NotNull(message = "Patient must be assigned")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
 
-    public Appointment(Patient patient, Doctor doctor, int apptId, String startTime, String endTime, String date, String visitTypeName, int visitTypeId, String status, int statusId) {
-        this.patient = patient;
+    @NotNull(message = "Appointment time must be provided")
+    @Future(message = "Appointment time must be in the future")
+    @Column(name = "appointment_time", nullable = false)
+    private LocalDateTime appointmentTime;
+
+    @NotNull(message = "Status is required")
+    @Column(nullable = false)
+    private Integer status; // 0 = scheduled, 1 = completed
+
+    // Default constructor required by JPA
+    public Appointment() {
+    }
+
+    // Parameterized constructor
+    public Appointment(Doctor doctor, Patient patient, LocalDateTime appointmentTime, Integer status) {
         this.doctor = doctor;
-        this.apptId = apptId;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.apptDate = date;
+        this.patient = patient;
+        this.appointmentTime = appointmentTime;
         this.status = status;
-        this.statusId = statusId;
-        this.visitTypeId = visitTypeId;
-        this.visitTypeName = visitTypeName;
     }
 
-    public Appointment(int apptId, int doctorId, int patientId, String startTime, String endTime, String apptDate, String status, int statusId) {
-        this.apptId = apptId;
-        this.doctorId = doctorId;
-        this.patientId = patientId;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.apptDate = apptDate;
-        this.status = status;
-        this.statusId = statusId;
-        this.visitTypeId = visitTypeId;
-        this.visitTypeName = visitTypeName;
+    // Transient method: end time is not stored in DB
+    @Transient
+    public LocalDateTime getEndTime() {
+        return appointmentTime.plusHours(1);
     }
 
-    public void setApptId(int i) { this.apptId = i; }
+    @Transient
+    public LocalDate getAppointmentDate() {
+        return appointmentTime.toLocalDate();
+    }
 
-    public void setDoctorId(int i) { this.doctorId = i; }
+    @Transient
+    public LocalTime getAppointmentTimeOnly() {
+        return appointmentTime.toLocalTime();
+    }
 
-    public void setPatientId(int i) { this.patientId = i; }
+    // Getters and Setters
 
-    public void setStartTime(String s) { this.startTime = s; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setEndTime(String s) { this.endTime = s; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public void setDate(String s) { this.apptDate = s; }
+    public Doctor getDoctor() {
+        return doctor;
+    }
 
-    public void setStatus(String s) { this.status = s; }
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
+    }
 
-    public void setStatusId(int i) { this.statusId = i; };
+    public Patient getPatient() {
+        return patient;
+    }
 
-    public int getApptId() { return apptId; }
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
 
-    public int getDoctorId() { return doctorId; }
+    public LocalDateTime getAppointmentTime() {
+        return appointmentTime;
+    }
 
-    public int getPatientId() { return patientId; }
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
+        this.appointmentTime = appointmentTime;
+    }
 
-    public String getStartTime() { return startTime; }
+    public Integer getStatus() {
+        return status;
+    }
 
-    public String getEndTime() { return endTime; }
-
-    public String getDate() { return apptDate; }
-
-    public String getStatus() { return status; }
-
-    public int getStatusId() { return statusId; }
-
-    public int getVisitTypeId() { return visitTypeId; }
-
-    public void setVisitTypeId(int visitTypeId) { this.visitTypeId = visitTypeId; }
-
-    public String getVisitTypeName() { return visitTypeName; }
-
-    public void setVisitTypeName(String visitTypeName) { this.visitTypeName = visitTypeName; }
-    
-    public Patient getPatient() { return patient; }
-
-    public void setPatient(Patient patient) { this.patient = patient; }
-
-    public Doctor getDoctor() { return doctor; }
-
-    public void setDoctor(Doctor doctor) { this.doctor = doctor; }
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 }
-
