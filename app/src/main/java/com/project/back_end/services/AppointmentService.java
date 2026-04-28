@@ -1,71 +1,120 @@
 package com.project.back_end.services;
 
-import com.clinic.model.Appointment;
-import com.clinic.repository.AppointmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.project.back_end.models.Appointment;
+//import com.project.back_end.models.Doctor;
+//import com.project.back_end.models.Patient;
+import com.project.back_end.repo.AppointmentRepository;
+import com.project.back_end.repo.DoctorRepository;
+import com.project.back_end.repo.PatientRepository;
+import jakarta.transaction.Transactional;
+//import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Service // 1. Mark this as a Spring-managed service component
 public class AppointmentService {
 
-    @Autowired
-    private AppointmentRepository appointmentRepository;
+    private final AppointmentRepository appointmentRepository;
+    @SuppressWarnings("unused")
+    private final DoctorRepository doctorRepository;
+    @SuppressWarnings("unused")
+    private final PatientRepository patientRepository;
 
-    public List<Appointment> getAllAppointments() {
-        return appointmentRepository.findAll();
+    // 2. Constructor injection
+    
+    //@Autowired
+    public AppointmentService(AppointmentRepository appointmentRepository,
+                              DoctorRepository doctorRepository,
+                              PatientRepository patientRepository) {
+        this.appointmentRepository = appointmentRepository;
+        this.doctorRepository = doctorRepository;
+        this.patientRepository = patientRepository;
     }
 
-    public Optional<Appointment> getAppointmentById(Long id) {
-        return appointmentRepository.findById(id);
+    // 4. Book appointment
+    @Transactional
+    public int bookAppointment(Appointment appointment) {
+        try {
+            appointmentRepository.save(appointment);
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
-    public Appointment createAppointment(Appointment appointment) {
-        appointment.setStatus(Appointment.AppointmentStatus.SCHEDULED);
-        return appointmentRepository.save(appointment);
+    // 5. Update appointment
+    @Transactional
+    public String updateAppointment(Long appointmentId, Appointment updatedAppointment, Long patientId) {
+        Optional<Appointment> optional = appointmentRepository.findById(appointmentId);
+        if (optional.isEmpty()) return "Appointment not found";
+
+        Appointment existing = optional.get();
+        if (!existing.getPatient().getId().equals(patientId)) {
+            return "Unauthorized access";
+        }
+
+        LocalDateTime newTime = updatedAppointment.getAppointmentTime();
+        Long doctorId = updatedAppointment.getDoctor().getId();
+
+        // Check for time conflict
+        List<Appointment> conflicts = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
+                doctorId,
+                newTime.minusMinutes(59),
+                newTime.plusMinutes(59)
+        );
+
+        if (!conflicts.isEmpty()) return "Doctor is not available at the selected time";
+
+        // Update and save
+        existing.setDoctor(updatedAppointment.getDoctor());
+        existing.setAppointmentTime(updatedAppointment.getAppointmentTime());
+        existing.setStatus(updatedAppointment.getStatus());
+
+        appointmentRepository.save(existing);
+        return "Appointment updated successfully";
     }
 
-    public Optional<Appointment> updateAppointment(Long id, Appointment updated) {
-        return appointmentRepository.findById(id).map(existing -> {
-            if (updated.getStatus() != null) {
-                existing.setStatus(updated.getStatus());
-            }
-            if (updated.getNotes() != null) {
-                existing.setNotes(updated.getNotes());
-            }
-            if (updated.getAppointmentDate() != null) {
-                existing.setAppointmentDate(updated.getAppointmentDate());
-            }
-            if (updated.getAppointmentTime() != null) {
-                existing.setAppointmentTime(updated.getAppointmentTime());
-            }
-            return appointmentRepository.save(existing);
-        });
+    // 6. Cancel appointment
+    @Transactional
+    public String cancelAppointment(Long appointmentId, Long patientId) {
+        Optional<Appointment> optional = appointmentRepository.findById(appointmentId);
+        if (optional.isEmpty()) return "Appointment not found";
+
+        Appointment appointment = optional.get();
+        if (!appointment.getPatient().getId().equals(patientId)) {
+            return "Unauthorized cancellation";
+        }
+
+        appointmentRepository.delete(appointment);
+        return "Appointment canceled successfully";
     }
 
-    public void deleteAppointment(Long id) {
-        appointmentRepository.deleteById(id);
+    // 7. Get appointments for a doctor (optional filter by patient name)
+    @Transactional
+    public List<Appointment> getAppointmentsForDoctorOnDate(Long doctorId, LocalDate date, String patientName) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+
+        if (patientName != null && !patientName.isEmpty()) {
+            return appointmentRepository.findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
+                    doctorId, patientName, start, end
+            );
+        } else {
+            return appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
+                    doctorId, start, end
+            );
+        }
     }
 
-    public List<Appointment> getAppointmentsByPatientId(Long patientId) {
-        return appointmentRepository.findByPatientId(patientId);
-    }
-
-    public List<Appointment> getAppointmentsByDoctorId(Long doctorId) {
-        return appointmentRepository.findByDoctorId(doctorId);
-    }
-
-    public List<Appointment> getAppointmentsByStatus(Appointment.AppointmentStatus status) {
-        return appointmentRepository.findByStatus(status);
-    }
-
-    public long countByStatus(Appointment.AppointmentStatus status) {
-        return appointmentRepository.countByStatus(status);
-    }
-
-    public long countAll() {
-        return appointmentRepository.count();
+    // 8. Change status of appointment
+    @Transactional
+    public void changeAppointmentStatus(Long appointmentId, int status) {
+        appointmentRepository.updateStatus(status, appointmentId);
     }
 }
